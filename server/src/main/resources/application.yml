@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: order-rpc
+  datasource:
+    username: root
+    password: root123
+    url: jdbc:mysql://192.168.99.108:3306/sc-db?characterEncoding=utf-8&useSSL=false
+  jackson:
+    default-property-inclusion: non_null
+    date-format: yyyy-MM-dd HH:mm:ss
+  jpa:
+    show-sql: true
+swagger:
+  enabled: true
+  base-package: cn.net.liaowei.sc.order
+  title: "产品服务"
+  version: v0.0.1
+server:
+  port: 8186
+com:
+  alipay:
+    sofa:
+      rpc:
+        registry:
+          address: consul://192.168.99.103:8500?healthCheck.type=http&healthCheck.path=/actuator/readiness&healthCheck.port=${server.port}
+        bolt-port: 12222
