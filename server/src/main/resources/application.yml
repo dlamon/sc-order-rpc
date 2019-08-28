@@ -21,6 +21,14 @@ com:
   alipay:
     sofa:
       rpc:
+        bolt-port: 12222
         registry:
           address: consul://192.168.99.103:8500?healthCheck.type=http&healthCheck.path=/actuator/readiness&healthCheck.port=${server.port}
-        bolt-port: 12222
+      tracer:
+        zipkin:
+          base-url: http://192.168.99.108:9411
+logging:
+  graylog:
+    host: 192.168.99.108
+    port: 12201
+debug: true

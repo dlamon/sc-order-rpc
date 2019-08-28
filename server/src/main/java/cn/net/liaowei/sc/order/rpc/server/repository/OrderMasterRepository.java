@@ -1,6 +1,6 @@
 package cn.net.liaowei.sc.order.rpc.server.repository;
 
-import cn.net.liaowei.sc.order.rpc.server.domain.dos.OrderMasterDO;
+import cn.net.liaowei.sc.order.rpc.server.domain.OrderMasterDO;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

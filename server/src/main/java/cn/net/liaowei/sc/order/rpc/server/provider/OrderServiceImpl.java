@@ -1,21 +1,22 @@
-package cn.net.liaowei.sc.order.rpc.server.client.impl;
+package cn.net.liaowei.sc.order.rpc.server.provider;
 
 
-import cn.net.liaowei.sc.order.rpc.client.OrderClient;
+import cn.net.liaowei.sc.order.rpc.client.OrderService;
 import cn.net.liaowei.sc.order.rpc.common.OrderDTO;
 import cn.net.liaowei.sc.order.rpc.common.OrderDetailDTO;
-import cn.net.liaowei.sc.order.rpc.server.domain.dos.OrderDetailDO;
-import cn.net.liaowei.sc.order.rpc.server.domain.dos.OrderMasterDO;
+import cn.net.liaowei.sc.order.rpc.server.domain.OrderDetailDO;
+import cn.net.liaowei.sc.order.rpc.server.domain.OrderMasterDO;
 import cn.net.liaowei.sc.order.rpc.server.enums.ErrorEnum;
 import cn.net.liaowei.sc.order.rpc.server.exception.SCException;
 import cn.net.liaowei.sc.order.rpc.server.repository.OrderDetailRepository;
 import cn.net.liaowei.sc.order.rpc.server.repository.OrderMasterRepository;
 import cn.net.liaowei.sc.order.rpc.server.util.KeyUtil;
-import cn.net.liaowei.sc.product.client.ProductClient;
-import cn.net.liaowei.sc.product.common.DecreaseQuotaDTO;
-import cn.net.liaowei.sc.product.common.ProductInfoDTO;
+import cn.net.liaowei.sc.product.rpc.client.ProductService;
+import cn.net.liaowei.sc.product.rpc.common.DecreaseQuotaDTO;
+import cn.net.liaowei.sc.product.rpc.common.ProductInfoDTO;
 import com.alipay.sofa.rpc.registry.consul.ConsulConstants;
 import com.alipay.sofa.runtime.api.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,15 +28,15 @@ import java.util.stream.Collectors;
 /**
  * @author LiaoWei
  */
+@Slf4j
 @Service
 @SofaService(
-        interfaceType = ProductClient.class,
         bindings = @SofaServiceBinding(
                 bindingType = "bolt",
                 parameters = @SofaParameter(key = ConsulConstants.CONSUL_SERVICE_NAME_KEY, value = "${spring.application.name}")
         )
 )
-public class OrderClientImpl implements OrderClient {
+public class OrderServiceImpl implements OrderService {
     @SofaReference(
             binding = @SofaReferenceBinding(
                     bindingType = "bolt",
@@ -43,12 +44,12 @@ public class OrderClientImpl implements OrderClient {
             ),
             jvmFirst = false
     )
-    private ProductClient productClient;
+    private ProductService productService;
 
     private OrderMasterRepository orderMasterRepository;
     private OrderDetailRepository orderDetailRepository;
 
-    public OrderClientImpl(OrderMasterRepository orderMasterRepository, OrderDetailRepository orderDetailRepository) {
+    public OrderServiceImpl(OrderMasterRepository orderMasterRepository, OrderDetailRepository orderDetailRepository) {
         this.orderMasterRepository = orderMasterRepository;
         this.orderDetailRepository = orderDetailRepository;
     }
@@ -56,19 +57,20 @@ public class OrderClientImpl implements OrderClient {
     @Override
     @Transactional
     public String create(OrderDTO orderDTO) {
+        log.info("222333434445555");
         // 产生主订单编号
         String orderMasterId = KeyUtil.genUniqueKey();
 
         // 通过订单中产品编号获取产品信息
         List<Integer> productIdList = orderDTO.getOrderDetailDTOList().stream()
                 .map(OrderDetailDTO::getProductId).collect(Collectors.toList());
-        List<ProductInfoDTO> productInfoDTOList = productClient.listByProductId(productIdList);
+        List<ProductInfoDTO> productInfoDTOList = productService.listByIds(productIdList);
 
         // 扣减产品可用额度
         List<DecreaseQuotaDTO> decreaseQuotaDTOList = orderDTO.getOrderDetailDTOList().stream()
                 .map(e -> new DecreaseQuotaDTO(e.getProductId(), e.getBuyAmount()))
                 .collect(Collectors.toList());
-        productClient.decreaseQuota(decreaseQuotaDTOList);
+        productService.decreaseQuota(decreaseQuotaDTOList);
 
         // 写主订单详情
         BigDecimal orderAmount = orderDTO.getOrderDetailDTOList().stream()
@@ -128,5 +130,10 @@ public class OrderClientImpl implements OrderClient {
             orderMasterRepository.save(orderMasterDO);
         }
         return orderMasterIdList;
+    }
+
+    @Override
+    public List<OrderDTO> list(List<String> ids) {
+        return null;
     }
 }
