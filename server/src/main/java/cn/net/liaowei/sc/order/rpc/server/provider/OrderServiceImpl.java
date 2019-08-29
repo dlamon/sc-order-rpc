@@ -58,6 +58,8 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public String create(OrderDTO orderDTO) {
         log.info("222333434445555");
+        int t = 4 / 0;
+        log.info("4/0 throws exception");
         // 产生主订单编号
         String orderMasterId = KeyUtil.genUniqueKey();
 
